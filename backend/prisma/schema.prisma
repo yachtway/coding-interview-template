@@ -14,3 +14,21 @@ model User {
   id          String @id @default(uuid())
   displayName String
 }
+
+model Message {
+  id         String   @id @default(uuid())
+  createdAt  DateTime @default(now())
+  content    String
+  senderName String?
+
+  channel   Channel @relation(fields: [channelId], references: [id])
+  channelId String
+}
+
+model Channel {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  name      String
+
+  messages Message[]
+}
