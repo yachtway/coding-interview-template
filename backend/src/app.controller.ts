@@ -5,11 +5,17 @@ import { AppService } from './app.service';
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
+  /**
+   * @returns all messages for a given channel
+   */
   @Get('messages/:channelId')
   getMessages(@Param('channelId') channelId: string) {
     return this.appService.getMessages(channelId);
   }
 
+  /**
+   * @returns all channels
+   */
   @Get('channels')
   getChannels() {
     return this.appService.getChannels();
