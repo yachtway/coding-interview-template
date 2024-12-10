@@ -11,6 +11,8 @@ import {
 import { Server } from 'socket.io';
 import { PrismaService } from 'src/prisma.service';
 
+// Socket server URI is ws://localhost:3001/chat
+
 @WebSocketGateway({ cors: true, namespace: 'chat' })
 export class ChatGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
@@ -35,6 +37,7 @@ export class ChatGateway
     this.logger.log(`Client id: ${client.id} disconnected`);
   }
 
+  // This subscribes an event on the 'message' channel
   @SubscribeMessage('message')
   async handleMessage(
     client: any,
@@ -45,15 +48,17 @@ export class ChatGateway
     },
   ) {
     this.logger.log(`Message received from client id: ${client.id}`);
-    // this.logger.debug(`Payload: ${payload}`);
+    this.logger.debug(`Payload: ${payload}`);
     // Server emits event to all clients
     this.io.emit('message', payload);
     // Add message to database
     await this.prismaService.message.create({
       data: {
-        channelId: payload.channelId || '86539db7-d307-4449-acd5-bb4127e3d4d7',
         content: payload.content,
-        senderName: payload.senderName,
+        // Defaults to "default" channel's ID
+        channelId: payload.channelId || '86539db7-d307-4449-acd5-bb4127e3d4d7',
+        // Defaults to "Anon" sender name
+        senderName: payload.senderName || 'Anon',
       },
     });
     // Undefined return means no ack needed

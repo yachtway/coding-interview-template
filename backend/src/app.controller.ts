@@ -14,7 +14,7 @@ export class AppController {
   /**
    * @returns all messages for a given channel
    */
-  @Get('messages/:channelId')
+  @Get('channels/:channelId/messages')
   getMessages(@Param('channelId') channelId: string) {
     return this.appService.getMessages(channelId);
   }
