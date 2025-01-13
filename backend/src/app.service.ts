@@ -9,11 +9,13 @@ export class AppService {
     return { message: 'Your backend is running!' };
   }
 
-  async getMessages(channelId?: string) {
-    const id = channelId || '86539db7-d307-4449-acd5-bb4127e3d4d7';
+  async getMessages(channelId: string) {
+    if (!channelId) {
+      throw new Error('Channel ID is required');
+    }
     return await this.prismaService.message.findMany({
       where: {
-        channelId: id,
+        channelId,
       },
       orderBy: { createdAt: 'asc' },
     });

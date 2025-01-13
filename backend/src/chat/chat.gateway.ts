@@ -38,15 +38,27 @@ export class ChatGateway
   }
 
   // This subscribes an event on the 'message' channel
+  // It expects a payload which is an object with the following properties:
+  // - content: string
+  // - channelId: string
+  // - senderName: string (optional)
   @SubscribeMessage('message')
   async handleMessage(
     client: any,
     payload: {
       content: string;
-      channelId?: string;
+      channelId: string;
       senderName?: string;
     },
   ) {
+    if (!payload.content) {
+      this.logger.error('Content is required');
+      throw new Error('Content is required');
+    }
+    if (!payload.channelId) {
+      this.logger.error('Channel ID is required');
+      throw new Error('Channel ID is required');
+    }
     this.logger.log(`Message received from client id: ${client.id}`);
     this.logger.debug(`Payload: ${payload}`);
     // Server emits event to all clients
@@ -55,8 +67,7 @@ export class ChatGateway
     await this.prismaService.message.create({
       data: {
         content: payload.content,
-        // Defaults to "default" channel's ID
-        channelId: payload.channelId || '86539db7-d307-4449-acd5-bb4127e3d4d7',
+        channelId: payload.channelId,
         // Defaults to "Anon" sender name
         senderName: payload.senderName || 'Anon',
       },
