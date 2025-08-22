@@ -1,30 +1,10 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+# Backend API Documentation
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
-
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+A NestJS-based backend API with real-time chat functionality using WebSockets and Prisma ORM for database management.
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+This backend provides a REST API for managing channels and messages, along with real-time chat functionality via WebSockets. Built with [NestJS](https://github.com/nestjs/nest) framework and TypeScript.
 
 ## Installation
 
@@ -32,42 +12,96 @@
 $ npm install
 ```
 
+## Database Setup
+
+```bash
+# Generate Prisma client
+$ npx prisma generate
+```
+
 ## Running the app
 
 ```bash
 # development
-$ npm run start
-
-# watch mode
 $ npm run start:dev
-
-# production mode
-$ npm run start:prod
 ```
 
-## Test
+The server will start on `http://localhost:3001` by default.
 
-```bash
-# unit tests
-$ npm run test
+## API Endpoints
 
-# e2e tests
-$ npm run test:e2e
+### REST API
 
-# test coverage
-$ npm run test:cov
+#### Channels
+- **GET** `/channels`
+  - **Description**: Get all channels with their most recent message
+  - **Returns**: Array of Channel objects with additional fields:
+    ```typescript
+    {
+      id: string;
+      createdAt: Date;
+      name: string;
+      lastMessageSnippet: string;
+      lastMessageCreatedAt: Date | string;
+    }[]
+    ```
+
+#### Messages
+- **GET** `/channels/:channelId/messages`
+  - **Description**: Get all messages for a specific channel
+  - **Parameters**:
+    - `channelId` (string): The ID of the channel
+  - **Returns**: Array of Message objects:
+    ```typescript
+    {
+      id: string;
+      createdAt: Date;
+      content: string;
+      senderName: string | null;
+      channelId: string;
+    }[]
+    ```
+  - **Ordering**: Messages are returned in ascending order by creation date
+
+## WebSocket API
+
+### Connection
+- **URL**: `ws://localhost:3001/chat`
+
+### Events
+
+#### Client to Server Events
+
+##### `message`
+Send a new message to a channel.
+
+**Payload**:
+```typescript
+{
+  content: string;        // Required: The message content
+  channelId: string;      // Required: The target channel ID
+  senderName?: string;    // Optional: Sender name (defaults to "Anon")
+}
 ```
 
-## Support
+**Behavior**:
+- Message is broadcast to all connected clients
+- Message is saved to the database
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+#### Server to Client Events
 
-## Stay in touch
+##### `message`
+Broadcast when a new message is received.
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+**Payload**:
+```typescript
+{
+  content: string;
+  channelId: string;
+  senderName: string;
+}
+```
 
-## License
-
-Nest is [MIT licensed](LICENSE).
+### Connection Events
+- **Connection**: Logged with client ID and total connected clients count
+- **Disconnection**: Logged with client ID
